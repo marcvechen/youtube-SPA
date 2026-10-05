@@ -1,0 +1,61 @@
+import { createSlice } from "@reduxjs/toolkit";
+
+export const savedSearches = createSlice({
+  name: "savedSearches",
+  initialState: { list: [] },
+  reducers: {
+    loadSavedSearches(state, action) {
+      const saved = localStorage.getItem("savedSearches_" + action.payload);
+      if (saved !== null) {
+        state.list = JSON.parse(saved);
+      } else {
+        state.list = [];
+      }
+    },
+    addSavedSearch(state, action) {
+      state.list.push({
+        id: crypto.randomUUID(),
+        title: action.payload.title,
+        query: action.payload.query,
+        maxResult: action.payload.maxResult,
+        order: action.payload.order,
+      });
+      localStorage.setItem(
+        "savedSearches_" + action.payload.email,
+        JSON.stringify(state.list),
+      );
+    },
+    deleteSavedSearch(state, action) {
+      state.list = state.list.filter((item) => item.id !== action.payload.id);
+      localStorage.setItem(
+        "savedSearches_" + action.payload.email,
+        JSON.stringify(state.list),
+      );
+    },
+    changeSavedSearch(state, action) {
+      state.list = state.list.map((item) => {
+        if (item.id === action.payload.id) {
+          return {
+            ...item,
+            title: action.payload.newTitle,
+            maxResult: action.payload.maxResult,
+            order: action.payload.order,
+          };
+        } else {
+          return item;
+        }
+      });
+      localStorage.setItem(
+        "savedSearches_" + action.payload.email,
+        JSON.stringify(state.list),
+      );
+    },
+  },
+});
+export const {
+  loadSavedSearches,
+  addSavedSearch,
+  deleteSavedSearch,
+  changeSavedSearch,
+} = savedSearches.actions;
+export default savedSearches.reducer;
