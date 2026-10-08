@@ -1,22 +1,16 @@
-import {
-  Button,
-  Tabs,
-  List,
-  Modal,
-  Input,
-  Select,
-  Typography,
-  Slider,
-} from "antd";
+import { Button, List } from "antd";
 import { useNavigate } from "react-router";
-import { logout } from "../redux/authSlice";
+import { selectEmail } from "../redux/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import {
   loadSavedSearches,
   deleteSavedSearch,
   changeSavedSearch,
+  selectList,
 } from "../redux/savedSearchesSlice";
+import SavedSearchModal from "../сomponents/SavedSearchModal";
+import Header from "../сomponents/Header";
 import "../style/MainPage.css";
 import { getVideos, setSearchQuery } from "../redux/videosSlice";
 
@@ -25,17 +19,13 @@ function FavoritesPage() {
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const { Text } = Typography;
-  const { email } = useSelector((state) => state.auth);
-  const { list } = useSelector((state) => state.savedSearches);
+
+  const email = useSelector(selectEmail);
+  const list = useSelector(selectList);
   useEffect(() => {
     dispatch(loadSavedSearches(email));
   }, [dispatch, email]);
-  const handleLogOut = () => {
-    dispatch(logout());
-    localStorage.removeItem("access_token");
-    navigate("/login");
-  };
+
   const handleRun = (item) => {
     dispatch(setSearchQuery(item.query));
     dispatch(
@@ -57,7 +47,6 @@ function FavoritesPage() {
         changeSavedSearch({
           id: editingItem.id,
           newTitle: editingItem.title,
-          email,
           maxResult: editingItem.maxResult,
           order: editingItem.order,
         }),
@@ -71,29 +60,12 @@ function FavoritesPage() {
   const handleCancel = () => {
     setIsModalOpen(false);
   };
-  const onChange = (key) => {
-    if (key == 1) {
-      navigate("/");
-    }
-  };
-  const tabItems = [
-    {
-      key: "1",
-      label: "Search",
-    },
-    {
-      key: "2",
-      label: "Favorites",
-    },
-  ];
 
   return (
     <div className="mainDiv">
       <div className="innerDiv">
         <div className="header">
-          <Tabs defaultActiveKey="2" items={tabItems} onChange={onChange} />
-
-          <Button onClick={handleLogOut}>Log out</Button>
+          <Header activeKey={"2"} />
         </div>
         <List
           size="large"
@@ -105,9 +77,7 @@ function FavoritesPage() {
               {item.title}
               <div>
                 <Button
-                  onClick={() =>
-                    dispatch(deleteSavedSearch({ id: item.id, email }))
-                  }
+                  onClick={() => dispatch(deleteSavedSearch({ id: item.id }))}
                 >
                   ❌
                 </Button>
@@ -118,52 +88,14 @@ function FavoritesPage() {
           )}
         />
 
-        <Modal
-          title="Modify query "
-          closable={{ "aria-label": "Custom Close Button" }}
+        <SavedSearchModal
           open={isModalOpen}
+          onChange={setEditingItem}
           onOk={handleOk}
           onCancel={handleCancel}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div>
-              <Text>Query</Text>
-              <Input disabled placeholder={editingItem?.query} />
-            </div>
-            <div>
-              {" "}
-              <Text>Title</Text>
-              <Input
-                value={editingItem?.title}
-                onChange={(e) =>
-                  setEditingItem({ ...editingItem, title: e.target.value })
-                }
-              />
-            </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <Text>Sorting</Text>
-              <Select
-                value={editingItem?.order}
-                onChange={(e) => setEditingItem({ ...editingItem, order: e })}
-                options={[
-                  { value: "relevance", label: "Popular" },
-                  { value: "date", label: "New" },
-                  { value: "viewCount", label: "Most views" },
-                ]}
-              />
-            </div>
-            <div>
-              <Text>Maximum number of videos</Text>
-              <Slider
-                value={editingItem?.maxResult}
-                onChange={(count) =>
-                  setEditingItem({ ...editingItem, maxResult: count })
-                }
-                max={50}
-              />
-            </div>
-          </div>
-        </Modal>
+          title={"Modify query"}
+          item={editingItem}
+        />
       </div>
     </div>
   );

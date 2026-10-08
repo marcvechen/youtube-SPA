@@ -2,20 +2,35 @@ import axios from "axios";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
+const BASE_URL = import.meta.env.VITE_YOUTUBE_API_URL;
+
 export const getVideos = createAsyncThunk(
   "videos/getVideos",
   async (searchInput, thunkAPI) => {
+    const searchParams = {
+      part: "snippet",
+      q: searchInput.query,
+      type: "video",
+      maxResults: searchInput.maxResult,
+      order: searchInput.order,
+      key: API_KEY,
+    };
     try {
-      const videoResponse = await axios.get(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchInput.query}&type=video&maxResults=${searchInput.maxResult}&order=${searchInput.order}&key=${API_KEY}`,
-      );
+      const videoResponse = await axios.get(`${BASE_URL}search`, {
+        params: searchParams,
+      });
+
       const ids = videoResponse.data.items
         .map((item) => item.id.videoId)
         .join(",");
-
-      const statisticsResponse = await axios.get(
-        `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids}&key=${API_KEY}`,
-      );
+      const statisticsParams = {
+        part: "statistics",
+        id: ids,
+        key: API_KEY,
+      };
+      const statisticsResponse = await axios.get(`${BASE_URL}videos`, {
+        params: statisticsParams,
+      });
       const result = videoResponse.data.items.map((video) => {
         return {
           id: video.id.videoId,
@@ -40,7 +55,7 @@ export const getVideos = createAsyncThunk(
   },
 );
 const videosSlice = createSlice({
-  name: "videoSlice",
+  name: "videos",
   initialState: { video: [], searchQuery: "", loading: false, error: null },
   reducers: {
     setSearchQuery(state, action) {
@@ -64,6 +79,11 @@ const videosSlice = createSlice({
       state.error = action.payload;
     });
   },
+  selectors: {
+    selectVideo: (state) => state.video,
+    selectSearchQuery: (state) => state.searchQuery,
+  },
 });
 export const { setSearchQuery, clearVideos } = videosSlice.actions;
+export const { selectVideo, selectSearchQuery } = videosSlice.selectors;
 export default videosSlice.reducer;

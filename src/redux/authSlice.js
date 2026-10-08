@@ -1,12 +1,11 @@
 import axios from "axios";
 import { createSlice, createAsyncThunk, isAnyOf } from "@reduxjs/toolkit";
 import { jwtDecode } from "jwt-decode";
+const BASE_AUTH_URL = import.meta.env.VITE_AUTH_API_URL;
+
 export const login = createAsyncThunk("auth/login", async (data, thunkAPI) => {
   try {
-    const response = await axios.post(
-      "https://todo-redev.onrender.com/api/auth/login",
-      data,
-    );
+    const response = await axios.post(`${BASE_AUTH_URL}login`, data);
     localStorage.setItem("access_token", response.data.access_token);
     const decode = jwtDecode(response.data.access_token);
     return { decoded: decode, token: response.data.access_token };
@@ -20,10 +19,7 @@ export const register = createAsyncThunk(
   "auth/register",
   async (data, thunkAPI) => {
     try {
-      const response = await axios.post(
-        "https://todo-redev.onrender.com/api/auth/register",
-        data,
-      );
+      const response = await axios.post(`${BASE_AUTH_URL}}register`, data);
       localStorage.setItem("access_token", response.data.access_token);
       const decode = jwtDecode(response.data.access_token);
       return { decoded: decode, token: response.data.access_token };
@@ -37,7 +33,7 @@ export const register = createAsyncThunk(
 );
 const token = localStorage.getItem("access_token");
 const authSlice = createSlice({
-  name: "authSlice",
+  name: "auth",
   initialState: {
     token: token,
     email: token ? jwtDecode(token).email : null,
@@ -73,6 +69,9 @@ const authSlice = createSlice({
       },
     );
   },
+  selectors: { selectEmail: (state) => state.email },
 });
 export const { logout } = authSlice.actions;
+export const { selectEmail } = authSlice.selectors;
+
 export default authSlice.reducer;

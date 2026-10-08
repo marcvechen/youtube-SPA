@@ -14,23 +14,15 @@ export const savedSearches = createSlice({
     },
     addSavedSearch(state, action) {
       state.list.push({
-        id: crypto.randomUUID(),
+        id: action.payload.id,
         title: action.payload.title,
         query: action.payload.query,
         maxResult: action.payload.maxResult,
         order: action.payload.order,
       });
-      localStorage.setItem(
-        "savedSearches_" + action.payload.email,
-        JSON.stringify(state.list),
-      );
     },
     deleteSavedSearch(state, action) {
       state.list = state.list.filter((item) => item.id !== action.payload.id);
-      localStorage.setItem(
-        "savedSearches_" + action.payload.email,
-        JSON.stringify(state.list),
-      );
     },
     changeSavedSearch(state, action) {
       state.list = state.list.map((item) => {
@@ -45,12 +37,9 @@ export const savedSearches = createSlice({
           return item;
         }
       });
-      localStorage.setItem(
-        "savedSearches_" + action.payload.email,
-        JSON.stringify(state.list),
-      );
     },
   },
+  selectors: { selectList: (state) => state.list },
 });
 export const {
   loadSavedSearches,
@@ -58,4 +47,5 @@ export const {
   deleteSavedSearch,
   changeSavedSearch,
 } = savedSearches.actions;
+export const { selectList } = savedSearches.selectors;
 export default savedSearches.reducer;
